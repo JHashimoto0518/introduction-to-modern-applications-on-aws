@@ -6,24 +6,34 @@ export class MonolithicStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
+    // vpc
     const vpc = new ec2.Vpc(this, 'vpc', {
       vpcName: "sbs-dev-vpc",
       ipAddresses: ec2.IpAddresses.cidr('172.16.0.0/16'),
-      natGateways: 2,
+      natGateways: 0,
       maxAzs: 2,
       subnetConfiguration: [
         {
           cidrMask: 24,
-          name: 'pub',
+          name: 'public',
           subnetType: ec2.SubnetType.PUBLIC
         },
         {
           cidrMask: 24,
-          name: 'pri',
+          name: 'private',
           subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS
         }
       ],
     });
+
+    //
+    // web server
+    //
+    const webServerSg = new ec2.SecurityGroup(this, "web-server-sg", {
+      vpc,
+      allowAllOutbound: true,
+      description: "security group for a web server"
+    })
 
     const webServer = new ec2.Instance(this, "ec2-web", {
       instanceType: new ec2.InstanceType("t2.medium"),
@@ -43,6 +53,7 @@ export class MonolithicStack extends Stack {
       vpcSubnets: vpc.selectSubnets({
         subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
       }),
+      securityGroup: webServerSg
     });
   }
 }
