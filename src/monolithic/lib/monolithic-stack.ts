@@ -9,7 +9,7 @@ export class MonolithicStack extends Stack {
     const vpc = new ec2.Vpc(this, 'vpc', {
       vpcName: "sbs-dev-vpc",
       ipAddresses: ec2.IpAddresses.cidr('172.16.0.0/16'),
-      natGateways: 1,
+      natGateways: 2,
       maxAzs: 2,
       subnetConfiguration: [
         {
@@ -23,6 +23,26 @@ export class MonolithicStack extends Stack {
           subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS
         }
       ],
+    });
+
+    const webServer = new ec2.Instance(this, "ec2-web", {
+      instanceType: new ec2.InstanceType("t2.medium"),
+      machineImage: ec2.MachineImage.latestAmazonLinux({
+        generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
+      }),
+      vpc: vpc,
+      blockDevices: [
+        {
+          deviceName: "/dev/xvda",
+          volume: ec2.BlockDeviceVolume.ebs(8, {
+            volumeType: ec2.EbsDeviceVolumeType.GP3,
+          }),
+        },
+      ],
+      propagateTagsToVolumeOnCreation: true,
+      vpcSubnets: vpc.selectSubnets({
+        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+      }),
     });
   }
 }
