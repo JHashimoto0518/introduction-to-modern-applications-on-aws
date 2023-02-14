@@ -1,5 +1,6 @@
 import { Duration, Stack, StackProps } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
 export class MonolithicStack extends Stack {
@@ -10,7 +11,7 @@ export class MonolithicStack extends Stack {
     const vpc = new ec2.Vpc(this, 'vpc', {
       vpcName: "sbs-dev-vpc",
       ipAddresses: ec2.IpAddresses.cidr('172.16.0.0/16'),
-      natGateways: 0,
+      natGateways: 2,
       maxAzs: 2,
       subnetConfiguration: [
         {
@@ -35,6 +36,16 @@ export class MonolithicStack extends Stack {
       description: "security group for a web server"
     })
 
+    const webServerRole = new iam.Role(this, 'web-server-role', {
+      assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          "AmazonSSMManagedInstanceCore"    // for managed by SSM
+        ),
+      ],
+      description: 'role for web server ec2',
+    });
+
     const webServer = new ec2.Instance(this, "ec2-web", {
       instanceType: new ec2.InstanceType("t2.medium"),
       machineImage: ec2.MachineImage.latestAmazonLinux({
@@ -53,7 +64,8 @@ export class MonolithicStack extends Stack {
       vpcSubnets: vpc.selectSubnets({
         subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
       }),
-      securityGroup: webServerSg
+      securityGroup: webServerSg,
+      role: webServerRole
     });
   }
 }
