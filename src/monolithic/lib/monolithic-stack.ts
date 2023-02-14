@@ -47,6 +47,7 @@ export class MonolithicStack extends Stack {
     });
 
     const webServer = new ec2.Instance(this, "ec2-web", {
+      instanceName: "sbs-dev-ec2-web",
       instanceType: new ec2.InstanceType("t2.medium"),
       machineImage: ec2.MachineImage.latestAmazonLinux({
         generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
