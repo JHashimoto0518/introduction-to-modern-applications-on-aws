@@ -1,5 +1,6 @@
 import { Duration, Stack, StackProps } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
@@ -11,7 +12,7 @@ export class MonolithicStack extends Stack {
     const vpc = new ec2.Vpc(this, 'vpc', {
       vpcName: "sbs-dev-vpc",
       ipAddresses: ec2.IpAddresses.cidr('172.16.0.0/16'),
-      natGateways: 2,
+      natGateways: 0,
       maxAzs: 2,
       subnetConfiguration: [
         {
@@ -77,6 +78,16 @@ export class MonolithicStack extends Stack {
       allowAllOutbound: true,
       description: "security group for alb"
     })
-    albSg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), "Allow HTTP traffic from internet")
+    albSg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), "allow http traffic from internet")
+
+    const alb = new elbv2.ApplicationLoadBalancer(this, "alb", {
+      internetFacing: true,
+      vpc,
+      vpcSubnets: {
+        subnets: vpc.publicSubnets
+      },
+      securityGroup: albSg
+    })
+
   }
 }
