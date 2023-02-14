@@ -76,7 +76,7 @@ export class MonolithicStack extends Stack {
       vpc,
       allowAllOutbound: true,
       description: "security group for alb"
-    }).addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), "Allow HTTP traffic from internet")
-
+    })
+    albSg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), "Allow HTTP traffic from internet")
   }
 }
