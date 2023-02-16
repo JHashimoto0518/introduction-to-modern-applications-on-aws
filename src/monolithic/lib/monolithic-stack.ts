@@ -1,6 +1,7 @@
 import { Duration, Stack, StackProps } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import * as elbv2_tg from 'aws-cdk-lib/aws-elasticloadbalancingv2-targets'
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
@@ -29,14 +30,25 @@ export class MonolithicStack extends Stack {
     });
 
     //
-    // web server
+    // Security Groups
     //
+    const albSg = new ec2.SecurityGroup(this, "alb-sg", {
+      vpc,
+      allowAllOutbound: true,
+      description: "security group for alb"
+    })
+    albSg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), "allow http traffic from anyone")
+
     const webServerSg = new ec2.SecurityGroup(this, "web-server-sg", {
       vpc,
       allowAllOutbound: true,
       description: "security group for a web server"
     })
+    webServerSg.connections.allowFrom(albSg, ec2.Port.tcp(80), 'allow http traffic from alb')
 
+    //
+    // web server
+    //
     const webServerRole = new iam.Role(this, 'web-server-role', {
       assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
       managedPolicies: [
@@ -73,13 +85,6 @@ export class MonolithicStack extends Stack {
     //
     // ALB
     //
-    const albSg = new ec2.SecurityGroup(this, "alb-sg", {
-      vpc,
-      allowAllOutbound: true,
-      description: "security group for alb"
-    })
-    albSg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), "allow http traffic from internet")
-
     const alb = new elbv2.ApplicationLoadBalancer(this, "alb", {
       internetFacing: true,
       vpc,
@@ -87,6 +92,17 @@ export class MonolithicStack extends Stack {
         subnets: vpc.publicSubnets
       },
       securityGroup: albSg
+    })
+
+    const instanceTarget = new elbv2_tg.InstanceTarget(webServer)
+
+    const albListener = alb.addListener("AlbHttpListener", {
+      port: 80,
+      protocol: elbv2.ApplicationProtocol.HTTP
+    })
+    albListener.addTargets("WebServerTarget", {
+      targets: [instanceTarget],
+      port: 80
     })
 
   }
