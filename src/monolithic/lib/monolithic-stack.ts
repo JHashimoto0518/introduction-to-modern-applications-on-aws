@@ -13,7 +13,7 @@ export class MonolithicStack extends Stack {
     const vpc = new ec2.Vpc(this, 'vpc', {
       vpcName: "sbs-dev-vpc",
       ipAddresses: ec2.IpAddresses.cidr('172.16.0.0/16'),
-      natGateways: 0,
+      natGateways: 1,
       maxAzs: 2,
       subnetConfiguration: [
         {
@@ -59,6 +59,22 @@ export class MonolithicStack extends Stack {
       description: 'role for web server ec2',
     });
 
+    const userData = ec2.UserData.forLinux({
+      shebang: "#!/bin/bash",
+    })
+    userData.addCommands(
+      "# setup httpd",
+      "sudo yum update -y",
+      "sudo yum install -y httpd",
+      "sudo systemctl start httpd",
+      "sudo systemctl enable httpd",
+      "sudo sh -c 'echo test > /var/www/html/index.html'",
+
+      "# setup Asp.Net Core runtime",
+      "sudo rpm -Uvh https://packages.microsoft.com/config/centos/7/packages-microsoft-prod.rpm",
+      "sudo yum install aspnetcore-runtime-7.0 -y"
+    )
+
     const webServer = new ec2.Instance(this, "ec2-web", {
       instanceName: "sbs-dev-ec2-web",
       instanceType: new ec2.InstanceType("t2.medium"),
@@ -79,7 +95,8 @@ export class MonolithicStack extends Stack {
         subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
       }),
       securityGroup: webServerSg,
-      role: webServerRole
+      role: webServerRole,
+      userData
     });
 
     //
