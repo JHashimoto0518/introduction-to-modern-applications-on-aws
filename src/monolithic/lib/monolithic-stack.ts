@@ -3,6 +3,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as elbv2_tg from 'aws-cdk-lib/aws-elasticloadbalancingv2-targets'
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as rds from "aws-cdk-lib/aws-rds";
 import { Construct } from 'constructs';
 
 export class MonolithicStack extends Stack {
@@ -122,5 +123,17 @@ export class MonolithicStack extends Stack {
       port: 80
     })
 
+    //
+    // RDS
+    //
+    const engine = rds.DatabaseInstanceEngine.mysql({ version: rds.MysqlEngineVersion.VER_8_0_31 });
+
+    new rds.DatabaseInstance(this, "BookStoreDB", {
+      engine: engine,
+      vpc: vpc,
+      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.SMALL),
+      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      databaseName: "bookstore",
+    }).connections.allowDefaultPortFrom(webServerSg);
   }
 }
