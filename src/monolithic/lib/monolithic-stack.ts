@@ -14,7 +14,7 @@ export class MonolithicStack extends Stack {
     const vpc = new ec2.Vpc(this, 'vpc', {
       vpcName: "sbs-dev-vpc",
       ipAddresses: ec2.IpAddresses.cidr('172.16.0.0/16'),
-      natGateways: 1,
+      natGateways: 0,
       maxAzs: 2,
       subnetConfiguration: [
         {
@@ -127,6 +127,17 @@ export class MonolithicStack extends Stack {
     // RDS
     //
     const engine = rds.DatabaseInstanceEngine.mysql({ version: rds.MysqlEngineVersion.VER_8_0_31 });
+    const parameterGroup = new rds.ParameterGroup(this, "BookStoreParamGrp", {
+      engine,
+      description: "for BookStoreDB"
+    })
+    const subnetGroup = new rds.SubnetGroup(this, 'BookStoreSubnetGrp', {
+      description: "for BookStoreDB",
+      vpc,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+      },
+    });
 
     new rds.DatabaseInstance(this, "BookStoreDB", {
       engine: engine,
@@ -134,6 +145,8 @@ export class MonolithicStack extends Stack {
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.SMALL),
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       databaseName: "bookstore",
+      subnetGroup,
+      parameterGroup,
     }).connections.allowDefaultPortFrom(webServerSg);
   }
 }
