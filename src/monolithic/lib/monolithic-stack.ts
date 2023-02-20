@@ -138,6 +138,11 @@ export class MonolithicStack extends Stack {
         subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
       },
     });
+    const optionGroup = new rds.OptionGroup(this, 'BookStoreOptGrp', {
+      engine,
+      configurations: [],
+      description: "for BookStoreDB"
+    })
 
     new rds.DatabaseInstance(this, "BookStoreDB", {
       engine: engine,
@@ -147,6 +152,7 @@ export class MonolithicStack extends Stack {
       databaseName: "bookstore",
       subnetGroup,
       parameterGroup,
+      optionGroup
     }).connections.allowDefaultPortFrom(webServerSg);
   }
 }
