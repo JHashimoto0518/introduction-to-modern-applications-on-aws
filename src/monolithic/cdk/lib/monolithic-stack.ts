@@ -1,4 +1,4 @@
-import { Duration, Stack, StackProps } from 'aws-cdk-lib';
+import { Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as elbv2_tg from 'aws-cdk-lib/aws-elasticloadbalancingv2-targets'
@@ -152,7 +152,8 @@ export class MonolithicStack extends Stack {
       databaseName: "bookstore",
       subnetGroup,
       parameterGroup,
-      optionGroup
+      optionGroup,
+      removalPolicy: RemovalPolicy.DESTROY    // To avoid OptionGroup deletion error, do not leave any snapshots
     }).connections.allowDefaultPortFrom(webServerSg);
   }
 }
