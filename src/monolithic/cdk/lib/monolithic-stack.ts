@@ -64,14 +64,14 @@ export class MonolithicStack extends Stack {
       shebang: "#!/bin/bash",
     })
     userData.addCommands(
-      "# setup httpd",
+      // setup httpd
       "sudo yum update -y",
       "sudo yum install -y httpd",
       "sudo systemctl start httpd",
       "sudo systemctl enable httpd",
       "sudo sh -c 'echo test > /var/www/html/index.html'",
 
-      "# setup Asp.Net Core runtime",
+      // setup Asp.Net Core runtime
       "sudo rpm -Uvh https://packages.microsoft.com/config/centos/7/packages-microsoft-prod.rpm",
       "sudo yum install aspnetcore-runtime-7.0 -y"
     )
