@@ -14,7 +14,7 @@ export class MonolithicStack extends Stack {
     const vpc = new ec2.Vpc(this, 'vpc', {
       vpcName: "sbs-dev-vpc",
       ipAddresses: ec2.IpAddresses.cidr('172.16.0.0/16'),
-      natGateways: 0,
+      natGateways: 1,
       maxAzs: 2,
       subnetConfiguration: [
         {
@@ -65,11 +65,11 @@ export class MonolithicStack extends Stack {
     })
     userData.addCommands(
       // setup httpd
-      "sudo yum update -y",
-      "sudo yum install -y httpd",
-      "sudo systemctl start httpd",
-      "sudo systemctl enable httpd",
-      "sudo sh -c 'echo test > /var/www/html/index.html'",
+      "yum update -y",
+      "yum install -y httpd",
+      "systemctl start httpd",
+      "systemctl enable httpd",
+      "sh -c 'echo test > /var/www/html/index.html'",
 
       // setup Asp.Net Core runtime
       "sudo rpm -Uvh https://packages.microsoft.com/config/centos/7/packages-microsoft-prod.rpm",
