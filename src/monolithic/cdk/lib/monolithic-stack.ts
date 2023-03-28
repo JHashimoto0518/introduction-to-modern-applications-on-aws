@@ -1,7 +1,7 @@
 import { Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
-import * as elbv2_tg from 'aws-cdk-lib/aws-elasticloadbalancingv2-targets'
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as rds from "aws-cdk-lib/aws-rds";
 import { Construct } from 'constructs';
@@ -76,8 +76,8 @@ export class MonolithicStack extends Stack {
       "yum install aspnetcore-runtime-7.0 -y"
     )
 
-    const webServer = new ec2.Instance(this, "ec2-web", {
-      instanceName: "sbs-dev-ec2-web",
+    const webAsg = new autoscaling.AutoScalingGroup(this, 'asg-web', {
+      autoScalingGroupName: "sbs-dev-asg-web",
       instanceType: new ec2.InstanceType("t2.medium"),
       machineImage: ec2.MachineImage.latestAmazonLinux({
         generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
@@ -86,18 +86,22 @@ export class MonolithicStack extends Stack {
       blockDevices: [
         {
           deviceName: "/dev/xvda",
-          volume: ec2.BlockDeviceVolume.ebs(8, {
-            volumeType: ec2.EbsDeviceVolumeType.GP3,
+          volume: autoscaling.BlockDeviceVolume.ebs(8, {
+            volumeType: autoscaling.EbsDeviceVolumeType.GP3,
           }),
         },
       ],
-      propagateTagsToVolumeOnCreation: true,
       vpcSubnets: vpc.selectSubnets({
         subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
       }),
       securityGroup: webServerSg,
       role: webServerRole,
-      userData
+      userData,
+      desiredCapacity: 1,
+      maxCapacity: 3,
+    })
+    webAsg.scaleOnCpuUtilization('CPU50Percent', {
+      targetUtilizationPercent: 50
     });
 
     //
@@ -112,14 +116,12 @@ export class MonolithicStack extends Stack {
       securityGroup: albSg
     })
 
-    const instanceTarget = new elbv2_tg.InstanceTarget(webServer)
-
     const albListener = alb.addListener("AlbHttpListener", {
       port: 80,
       protocol: elbv2.ApplicationProtocol.HTTP
     })
     albListener.addTargets("WebServerTarget", {
-      targets: [instanceTarget],
+      targets: [webAsg],
       port: 80
     })
 
