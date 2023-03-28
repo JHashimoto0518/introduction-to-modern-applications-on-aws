@@ -72,8 +72,8 @@ export class MonolithicStack extends Stack {
       "sh -c 'echo test > /var/www/html/index.html'",
 
       // setup Asp.Net Core runtime
-      "sudo rpm -Uvh https://packages.microsoft.com/config/centos/7/packages-microsoft-prod.rpm",
-      "sudo yum install aspnetcore-runtime-7.0 -y"
+      "rpm -Uvh https://packages.microsoft.com/config/centos/7/packages-microsoft-prod.rpm",
+      "yum install aspnetcore-runtime-7.0 -y"
     )
 
     const webServer = new ec2.Instance(this, "ec2-web", {
