@@ -69,7 +69,7 @@ export class MonolithicStack extends Stack {
       "yum install -y httpd",
       "systemctl start httpd",
       "systemctl enable httpd",
-      "sh -c 'echo test > /var/www/html/index.html'",
+      "sh -c 'echo \"This is a sample bookstore website.\" > /var/www/html/index.html'",
 
       // setup Asp.Net Core runtime
       "rpm -Uvh https://packages.microsoft.com/config/centos/7/packages-microsoft-prod.rpm",
