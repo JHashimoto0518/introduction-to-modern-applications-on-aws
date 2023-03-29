@@ -78,7 +78,7 @@ export class MonolithicStack extends Stack {
 
     const webAsg = new autoscaling.AutoScalingGroup(this, 'asg-web', {
       autoScalingGroupName: "sbs-dev-asg-web",
-      instanceType: new ec2.InstanceType("t2.medium"),
+      instanceType: new ec2.InstanceType("t2.micro"),
       machineImage: ec2.MachineImage.latestAmazonLinux({
         generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
       }),
