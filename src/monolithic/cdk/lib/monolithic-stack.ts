@@ -76,13 +76,12 @@ export class MonolithicStack extends Stack {
       "yum install aspnetcore-runtime-7.0 -y"
     )
 
-    const webAsg = new autoscaling.AutoScalingGroup(this, 'asg-web', {
-      autoScalingGroupName: "sbs-dev-asg-web",
+    const launchTemplate = new ec2.LaunchTemplate(this, 'web-server-lt', {
+      launchTemplateName: "sbs-dev-lt-web",
       instanceType: new ec2.InstanceType("t2.micro"),
       machineImage: ec2.MachineImage.latestAmazonLinux({
         generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
       }),
-      vpc: vpc,
       blockDevices: [
         {
           deviceName: "/dev/xvda",
@@ -91,12 +90,17 @@ export class MonolithicStack extends Stack {
           }),
         },
       ],
-      vpcSubnets: vpc.selectSubnets({
-        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
-      }),
       securityGroup: webServerSg,
       role: webServerRole,
       userData,
+    });
+
+    const webAsg = new autoscaling.AutoScalingGroup(this, 'asg-web', {
+      launchTemplate,
+      vpc,
+      vpcSubnets: vpc.selectSubnets({
+        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+      }),
       desiredCapacity: 1,
       maxCapacity: 3,
     })
