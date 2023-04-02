@@ -154,11 +154,14 @@ export class MonolithicStack extends Stack {
       engine: engine,
       vpc: vpc,
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.SMALL),
-      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+      },
       databaseName: "bookstore",
       subnetGroup,
       parameterGroup,
       optionGroup,
+      multiAz: true,
       removalPolicy: RemovalPolicy.DESTROY    // To avoid OptionGroup deletion error, do not leave any snapshots
     }).connections.allowDefaultPortFrom(webServerSg);
   }
