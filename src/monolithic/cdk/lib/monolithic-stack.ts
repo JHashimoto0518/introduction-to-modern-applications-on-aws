@@ -162,6 +162,7 @@ export class MonolithicStack extends Stack {
       parameterGroup,
       optionGroup,
       multiAz: true,
+      deleteAutomatedBackups: true,
       removalPolicy: RemovalPolicy.DESTROY    // To avoid OptionGroup deletion error, do not leave any snapshots
     }).connections.allowDefaultPortFrom(webServerSg);
   }
