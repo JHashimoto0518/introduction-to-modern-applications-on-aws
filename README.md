@@ -6,4 +6,4 @@ This is a practice of the book "Introduction to Modern Applications on AWS."[^1]
 
 # Monolithic
 
-![](/diagrams/monolithic.png)
+![](/diagrams/monolithic.drawio.png)
