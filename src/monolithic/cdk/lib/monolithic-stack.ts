@@ -163,20 +163,20 @@ export class MonolithicStack extends Stack {
       description: "for BookStoreDB"
     })
 
-    // new rds.DatabaseInstance(this, "BookStoreDB", {
-    //   engine: engine,
-    //   vpc: vpc,
-    //   instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.SMALL),
-    //   vpcSubnets: {
-    //     subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
-    //   },
-    //   databaseName: "bookstore",
-    //   subnetGroup,
-    //   parameterGroup,
-    //   optionGroup,
-    //   multiAz: true,
-    //   deleteAutomatedBackups: true,
-    //   removalPolicy: RemovalPolicy.DESTROY    // To avoid OptionGroup deletion error, do not leave any snapshots
-    // }).connections.allowDefaultPortFrom(webServerSg);
+    new rds.DatabaseInstance(this, "BookStoreDB", {
+      engine: engine,
+      vpc: vpc,
+      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.SMALL),
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+      },
+      databaseName: "bookstore",
+      subnetGroup,
+      parameterGroup,
+      optionGroup,
+      multiAz: true,
+      deleteAutomatedBackups: true,
+      removalPolicy: RemovalPolicy.DESTROY    // To avoid OptionGroup deletion error, do not leave any snapshots
+    }).connections.allowDefaultPortFrom(webServerSg);
   }
 }
