@@ -14,7 +14,7 @@ export class MonolithicStack extends Stack {
     const vpc = new ec2.Vpc(this, 'vpc', {
       vpcName: "sbs-dev-vpc",
       ipAddresses: ec2.IpAddresses.cidr('172.16.0.0/16'),
-      natGateways: 1,
+      natGateways: 0,
       maxAzs: 2,
       subnetConfiguration: [
         {
@@ -25,9 +25,26 @@ export class MonolithicStack extends Stack {
         {
           cidrMask: 24,
           name: 'private',
-          subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS
+          subnetType: ec2.SubnetType.PRIVATE_ISOLATED
         }
       ],
+    });
+    // add private endpoints for ssm
+    vpc.addInterfaceEndpoint('ssm', {
+      service: ec2.InterfaceVpcEndpointAwsService.SSM,
+    });
+    vpc.addInterfaceEndpoint('ssmmessages', {
+      service: ec2.InterfaceVpcEndpointAwsService.SSM_MESSAGES,
+    });
+    vpc.addInterfaceEndpoint('ec2messages', {
+      service: ec2.InterfaceVpcEndpointAwsService.EC2_MESSAGES,
+    });
+    // add private endpoint for Amazon Linux repository on s3
+    vpc.addGatewayEndpoint('s3', {
+      service: ec2.GatewayVpcEndpointAwsService.S3,
+      subnets: [
+        { subnetType: ec2.SubnetType.PRIVATE_ISOLATED }
+      ]
     });
 
     //
@@ -70,10 +87,6 @@ export class MonolithicStack extends Stack {
       "systemctl start httpd",
       "systemctl enable httpd",
       "sh -c 'echo \"This is a sample bookstore website.\" > /var/www/html/index.html'",
-
-      // setup Asp.Net Core runtime
-      "rpm -Uvh https://packages.microsoft.com/config/centos/7/packages-microsoft-prod.rpm",
-      "yum install aspnetcore-runtime-7.0 -y"
     )
 
     const launchTemplate = new ec2.LaunchTemplate(this, 'web-server-lt', {
@@ -99,7 +112,7 @@ export class MonolithicStack extends Stack {
       launchTemplate,
       vpc,
       vpcSubnets: vpc.selectSubnets({
-        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
       }),
       desiredCapacity: 1,
       maxCapacity: 3,
@@ -141,7 +154,7 @@ export class MonolithicStack extends Stack {
       description: "for BookStoreDB",
       vpc,
       vpcSubnets: {
-        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
       },
     });
     const optionGroup = new rds.OptionGroup(this, 'BookStoreOptGrp', {
@@ -150,20 +163,20 @@ export class MonolithicStack extends Stack {
       description: "for BookStoreDB"
     })
 
-    new rds.DatabaseInstance(this, "BookStoreDB", {
-      engine: engine,
-      vpc: vpc,
-      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.SMALL),
-      vpcSubnets: {
-        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
-      },
-      databaseName: "bookstore",
-      subnetGroup,
-      parameterGroup,
-      optionGroup,
-      multiAz: true,
-      deleteAutomatedBackups: true,
-      removalPolicy: RemovalPolicy.DESTROY    // To avoid OptionGroup deletion error, do not leave any snapshots
-    }).connections.allowDefaultPortFrom(webServerSg);
+    // new rds.DatabaseInstance(this, "BookStoreDB", {
+    //   engine: engine,
+    //   vpc: vpc,
+    //   instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.SMALL),
+    //   vpcSubnets: {
+    //     subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+    //   },
+    //   databaseName: "bookstore",
+    //   subnetGroup,
+    //   parameterGroup,
+    //   optionGroup,
+    //   multiAz: true,
+    //   deleteAutomatedBackups: true,
+    //   removalPolicy: RemovalPolicy.DESTROY    // To avoid OptionGroup deletion error, do not leave any snapshots
+    // }).connections.allowDefaultPortFrom(webServerSg);
   }
 }
