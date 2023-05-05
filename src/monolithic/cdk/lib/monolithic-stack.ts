@@ -120,6 +120,7 @@ export class MonolithicStack extends Stack {
         subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
       }),
       desiredCapacity: 1,
+      minCapacity: 1,
       maxCapacity: 3,
     })
     asGrpWeb.scaleOnCpuUtilization('Cpu50Percent', {
