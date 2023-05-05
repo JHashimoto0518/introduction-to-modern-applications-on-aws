@@ -1,4 +1,4 @@
-import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { RemovalPolicy, Stack, StackProps, CfnOutput } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
@@ -144,6 +144,11 @@ export class MonolithicStack extends Stack {
     listener.addTargets('AppTarget', {
       targets: [asGrpWeb],
       port: 80
+    })
+
+    // output test command
+    new CfnOutput(this, 'TestCommand', {
+      value: `curl -I http://${alb.loadBalancerDnsName}`
     })
 
     //
