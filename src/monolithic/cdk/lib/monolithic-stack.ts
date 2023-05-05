@@ -86,12 +86,10 @@ export class MonolithicStack extends Stack {
       shebang: '#!/bin/bash',
     })
     userData.addCommands(
-      // setup httpd
-      'yum update -y',
-      'yum install -y httpd',
-      'systemctl start httpd',
-      'systemctl enable httpd',
-      "sh -c 'echo \"This is a sample bookstore website.\" > /var/www/html/index.html'",
+      // setup nginx
+      'amazon-linux-extras install -y nginx1',  // NOTE: https://aws.amazon.com/jp/amazon-linux-2/faqs/#Amazon_Linux_Extras
+      'systemctl start nginx',
+      'systemctl enable nginx',
     )
 
     const launchTmpl = new ec2.LaunchTemplate(this, 'AppLaunchTmpl', {
