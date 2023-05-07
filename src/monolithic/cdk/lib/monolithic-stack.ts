@@ -1,8 +1,10 @@
 import { RemovalPolicy, Stack, StackProps, CfnOutput } from 'aws-cdk-lib';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
-import * as iam from 'aws-cdk-lib/aws-iam';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import { Construct } from 'constructs';
 
@@ -42,7 +44,7 @@ export class MonolithicStack extends Stack {
     });
 
     // add private endpoint for Amazon Linux repository on s3
-    vpc.addGatewayEndpoint('S3Endpoint', {
+    const s3Endpoint = vpc.addGatewayEndpoint('S3Endpoint', {
       service: ec2.GatewayVpcEndpointAwsService.S3,
       subnets: [
         { subnetType: ec2.SubnetType.PRIVATE_ISOLATED }
@@ -75,21 +77,68 @@ export class MonolithicStack extends Stack {
         iam.ManagedPolicy.fromAwsManagedPolicyName(
           'AmazonSSMManagedInstanceCore'
         ),
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          'AmazonS3ReadOnlyAccess'
+        ),
       ],
       description: 'role for application servers',
     });
 
     //
+    // S3
+    //
+    // s3 bucket for assets
+    const assetBucket = new s3.Bucket(this, 'AssetBucket', {
+      bucketName: 'bookstore-asset-bucket',
+      removalPolicy: RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
+    // allow access from vpc endpoint
+    assetBucket.addToResourcePolicy(new iam.PolicyStatement({
+      sid: 'AllowAccessFromVpcEndpoint',
+      effect: iam.Effect.ALLOW,
+      principals: [new iam.ArnPrincipal('*')],
+      actions: ['s3:*'],
+      resources: [
+        assetBucket.bucketArn,
+        `${assetBucket.bucketArn}/*`,
+      ],
+      conditions: {
+        'StringEquals': {
+          'aws:SourceVpce': s3Endpoint.vpcEndpointId,
+        },
+      },
+    }));
+
+    // upload asp.net core runtime to s3
+    const assetDeploy = new s3deploy.BucketDeployment(this, 'DeployAspNetCoreRuntime', {
+      sources: [s3deploy.Source.asset('./assets')],
+      destinationBucket: assetBucket,
+    });
+
+    //
     // application server
     //
+    // NOTE: The cloud-init output log file captures console output by user data. See: /var/log/cloud-init-output.log
     const userData = ec2.UserData.forLinux({
       shebang: '#!/bin/bash',
     })
+    // setup nginx  NOTE: https://aws.amazon.com/jp/amazon-linux-2/faqs/#Amazon_Linux_Extras
     userData.addCommands(
-      // setup nginx
-      'amazon-linux-extras install -y nginx1',  // NOTE: https://aws.amazon.com/jp/amazon-linux-2/faqs/#Amazon_Linux_Extras
+      'amazon-linux-extras install -y nginx1',
       'systemctl start nginx',
       'systemctl enable nginx',
+    )
+    // setup asp.net core runtime NOTE: https://learn.microsoft.com/ja-jp/dotnet/core/install/linux-scripted-manual
+    const runtimeBinary = 'aspnetcore-runtime-7.0.5-linux-x64.tar.gz'
+    userData.addCommands(
+      `wget https://${assetDeploy.deployedBucket.bucketRegionalDomainName}/${runtimeBinary}`,
+      `DOTNET_FILE=./${runtimeBinary}`,
+      "DOTNET_ROOT=/bin/dotnet",
+      "mkdir -p $DOTNET_ROOT && tar zxf $DOTNET_FILE -C $DOTNET_ROOT",
+      "rm $DOTNET_FILE",
+      'echo "export PATH=$PATH:$DOTNET_ROOT" >> /etc/environment',
     )
 
     const launchTmpl = new ec2.LaunchTemplate(this, 'AppLaunchTmpl', {
