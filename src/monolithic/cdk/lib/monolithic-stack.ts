@@ -144,8 +144,8 @@ export class MonolithicStack extends Stack {
     const launchTmpl = new ec2.LaunchTemplate(this, 'AppLaunchTmpl', {
       launchTemplateName: 'app-launch-tmpl',
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
-      machineImage: ec2.MachineImage.latestAmazonLinux({
-        generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
+      machineImage: ec2.MachineImage.latestAmazonLinux2({
+        cachedInContext: true,
       }),
       blockDevices: [
         {
