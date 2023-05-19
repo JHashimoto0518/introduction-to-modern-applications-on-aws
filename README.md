@@ -6,4 +6,12 @@ This is a practice of the book "Introduction to Modern Applications on AWS."[^1]
 
 ## Monolithic
 
+### Infrastructure
+
 ![Monolithic system infrastructure built with AWS, using EC2 as the application server](/diagrams/monolithic.drawio.png)
+
+### Application
+
+The application is hosted on the following repository.
+
+[JHashimoto0518/sample-book-store: This is a Sample Book Store application for the practice of the book "Introduction to Modern Applications with AWS."](https://github.com/JHashimoto0518/sample-book-store)
