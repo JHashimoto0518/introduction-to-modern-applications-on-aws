@@ -1,7 +1,5 @@
 import { RemovalPolicy, Stack, StackProps, CfnOutput } from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
@@ -16,7 +14,7 @@ export class MonolithicStack extends Stack {
     const vpc = new ec2.Vpc(this, 'BookStoreVpc', {
       vpcName: 'bookstore-vpc',
       ipAddresses: ec2.IpAddresses.cidr('172.16.0.0/16'),
-      natGateways: 0,
+      natGateways: 1,
       maxAzs: 2,
       subnetConfiguration: [
         {
@@ -27,7 +25,7 @@ export class MonolithicStack extends Stack {
         {
           cidrMask: 24,
           name: 'Private',
-          subnetType: ec2.SubnetType.PRIVATE_ISOLATED
+          subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS
         }
       ],
     });
@@ -41,14 +39,6 @@ export class MonolithicStack extends Stack {
     });
     vpc.addInterfaceEndpoint('Ec2MessagesEndpoint', {
       service: ec2.InterfaceVpcEndpointAwsService.EC2_MESSAGES,
-    });
-
-    // add private endpoint for Amazon Linux repository on s3
-    const s3Endpoint = vpc.addGatewayEndpoint('S3Endpoint', {
-      service: ec2.GatewayVpcEndpointAwsService.S3,
-      subnets: [
-        { subnetType: ec2.SubnetType.PRIVATE_ISOLATED }
-      ]
     });
 
     //
@@ -77,44 +67,8 @@ export class MonolithicStack extends Stack {
         iam.ManagedPolicy.fromAwsManagedPolicyName(
           'AmazonSSMManagedInstanceCore'
         ),
-        iam.ManagedPolicy.fromAwsManagedPolicyName(
-          'AmazonS3ReadOnlyAccess'
-        ),
       ],
       description: 'role for application servers',
-    });
-
-    //
-    // S3
-    //
-    // s3 bucket for assets
-    const assetBucket = new s3.Bucket(this, 'AssetBucket', {
-      bucketName: 'bookstore-asset-bucket',
-      removalPolicy: RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
-    });
-
-    // allow access from vpc endpoint
-    assetBucket.addToResourcePolicy(new iam.PolicyStatement({
-      sid: 'AllowAccessFromVpcEndpoint',
-      effect: iam.Effect.ALLOW,
-      principals: [new iam.ArnPrincipal('*')],
-      actions: ['s3:*'],
-      resources: [
-        assetBucket.bucketArn,
-        `${assetBucket.bucketArn}/*`,
-      ],
-      conditions: {
-        'StringEquals': {
-          'aws:SourceVpce': s3Endpoint.vpcEndpointId,
-        },
-      },
-    }));
-
-    // upload asp.net core runtime to s3
-    const assetDeploy = new s3deploy.BucketDeployment(this, 'DeployAspNetCoreRuntime', {
-      sources: [s3deploy.Source.asset('./assets')],
-      destinationBucket: assetBucket,
     });
 
     //
@@ -124,21 +78,16 @@ export class MonolithicStack extends Stack {
     const userData = ec2.UserData.forLinux({
       shebang: '#!/bin/bash',
     })
-    // setup nginx  NOTE: https://aws.amazon.com/jp/amazon-linux-2/faqs/#Amazon_Linux_Extras
+    // setup nginx  See: https://aws.amazon.com/jp/amazon-linux-2/faqs/#Amazon_Linux_Extras
     userData.addCommands(
       'amazon-linux-extras install -y nginx1',
       'systemctl start nginx',
       'systemctl enable nginx',
     )
-    // setup asp.net core runtime NOTE: https://learn.microsoft.com/ja-jp/dotnet/core/install/linux-scripted-manual
-    const runtimeBinary = 'aspnetcore-runtime-7.0.5-linux-x64.tar.gz'
+    //setup asp.net core runtime
     userData.addCommands(
-      `wget https://${assetDeploy.deployedBucket.bucketRegionalDomainName}/${runtimeBinary}`,
-      `DOTNET_FILE=./${runtimeBinary}`,
-      "DOTNET_ROOT=/bin/dotnet",
-      "mkdir -p $DOTNET_ROOT && tar zxf $DOTNET_FILE -C $DOTNET_ROOT",
-      "rm $DOTNET_FILE",
-      'echo "export PATH=$PATH:$DOTNET_ROOT" >> /etc/environment',
+      'rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm',
+      'yum install -y aspnetcore-runtime-7.0'
     )
 
     const launchTmpl = new ec2.LaunchTemplate(this, 'AppLaunchTmpl', {
@@ -164,7 +113,7 @@ export class MonolithicStack extends Stack {
       launchTemplate: launchTmpl,
       vpc,
       vpcSubnets: vpc.selectSubnets({
-        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
       }),
       desiredCapacity: 1,
       minCapacity: 1,
@@ -219,7 +168,7 @@ export class MonolithicStack extends Stack {
       vpc,
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.SMALL),
       vpcSubnets: {
-        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
       },
       databaseName: 'bookstore',
       parameterGroup: paramGrp,
