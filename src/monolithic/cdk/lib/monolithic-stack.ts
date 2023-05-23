@@ -78,22 +78,30 @@ export class MonolithicStack extends Stack {
     const userData = ec2.UserData.forLinux({
       shebang: '#!/bin/bash',
     })
-    // setup nginx  See: https://aws.amazon.com/jp/amazon-linux-2/faqs/#Amazon_Linux_Extras
+    // setup nginx
     userData.addCommands(
-      'amazon-linux-extras install -y nginx1',
+      'dnf update -y',
+      'dnf install nginx -y',
       'systemctl start nginx',
       'systemctl enable nginx',
     )
-    //setup asp.net core runtime
+    // setup asp.net core runtime
+    // NOTE: Installing aspnetcore-runtime-7.0 using dnf is not possible on Amazon Linux 2023.
+    // See: https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#manual-install
     userData.addCommands(
-      'rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm',
-      'yum install -y aspnetcore-runtime-7.0'
+      'DOWNLOAD_URL=https://download.visualstudio.microsoft.com/download/pr/b936641a-57d6-4069-bd32-280020863326/5793e00ff9e9973a01ca735479ff15b3/aspnetcore-runtime-7.0.5-linux-x64.tar.gz',
+      'DOTNET_FILE=./aspnetcore-runtime.tar.gz',
+      "wget $DOWNLOAD_URL -O $DOTNET_FILE",
+      'export DOTNET_ROOT=/bin/dotnet',
+      "mkdir -p $DOTNET_ROOT && tar zxf $DOTNET_FILE -C $DOTNET_ROOT",
+      'echo "export PATH=\$PATH:$DOTNET_ROOT" >> /etc/environment',
+      "rm $DOTNET_FILE"
     )
 
     const launchTmpl = new ec2.LaunchTemplate(this, 'AppLaunchTmpl', {
       launchTemplateName: 'app-launch-tmpl',
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
-      machineImage: ec2.MachineImage.latestAmazonLinux2({
+      machineImage: ec2.MachineImage.latestAmazonLinux2023({
         cachedInContext: true,
       }),
       blockDevices: [
