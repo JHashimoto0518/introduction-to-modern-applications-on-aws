@@ -1,5 +1,7 @@
 import { RemovalPolicy, Stack, StackProps, CfnOutput } from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
@@ -67,8 +69,29 @@ export class MonolithicStack extends Stack {
         iam.ManagedPolicy.fromAwsManagedPolicyName(
           'AmazonSSMManagedInstanceCore'
         ),
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          'AmazonS3ReadOnlyAccess'
+        ),
       ],
       description: 'role for application servers',
+    });
+
+    //
+    // S3
+    //
+    const assetsDir = './assets/publish';
+
+    // s3 bucket for assets
+    const assetBucket = new s3.Bucket(this, 'AssetBucket', {
+      removalPolicy: RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
+    // upload app to s3
+    const appDeploy = new s3deploy.BucketDeployment(this, 'DeployApp', {
+      sources: [s3deploy.Source.asset(assetsDir)],
+      destinationBucket: assetBucket,
+      destinationKeyPrefix: 'app',
     });
 
     //
@@ -85,6 +108,10 @@ export class MonolithicStack extends Stack {
       'systemctl start nginx',
       'systemctl enable nginx',
     )
+    // setup globalization
+    userData.addCommands(
+      'dnf install icu -y',
+    )
     // setup asp.net core runtime
     // NOTE: Installing aspnetcore-runtime-7.0 using dnf is not possible on Amazon Linux 2023.
     // See: https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#manual-install
@@ -96,6 +123,12 @@ export class MonolithicStack extends Stack {
       "mkdir -p $DOTNET_ROOT && tar zxf $DOTNET_FILE -C $DOTNET_ROOT",
       'echo "export PATH=\$PATH:$DOTNET_ROOT" >> /etc/environment',
       "rm $DOTNET_FILE"
+    )
+    // setup app
+    userData.addCommands(
+      'APP_DIR=/var/www/bookstore',
+      'mkdir -p $APP_DIR',
+      `aws s3 cp s3://${appDeploy.deployedBucket.bucketName}/app $APP_DIR --recursive`
     )
 
     const launchTmpl = new ec2.LaunchTemplate(this, 'AppLaunchTmpl', {

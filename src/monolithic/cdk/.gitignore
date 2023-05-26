@@ -10,5 +10,5 @@ cdk.out
 # CDK context
 cdk.context.json
 
-# runtime
-aspnetcore-runtime-*.tar.gz
+# assets for apps
+assets/
