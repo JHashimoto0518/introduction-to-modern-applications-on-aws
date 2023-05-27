@@ -79,7 +79,7 @@ export class MonolithicStack extends Stack {
     //
     // S3
     //
-    const assetsDir = './assets/publish';
+    const assetsDir = './assets';
 
     // s3 bucket for assets
     const assetBucket = new s3.Bucket(this, 'AssetBucket', {
@@ -87,11 +87,18 @@ export class MonolithicStack extends Stack {
       autoDeleteObjects: true,
     });
 
-    // upload app to s3
+    // upload app
     const appDeploy = new s3deploy.BucketDeployment(this, 'DeployApp', {
-      sources: [s3deploy.Source.asset(assetsDir)],
+      sources: [s3deploy.Source.asset(assetsDir + '/publish')],
       destinationBucket: assetBucket,
       destinationKeyPrefix: 'app',
+    });
+
+    // upload nginx config
+    const nginxDeploy = new s3deploy.BucketDeployment(this, 'DeployNginx', {
+      sources: [s3deploy.Source.asset(assetsDir + '/nginx')],
+      destinationBucket: assetBucket,
+      destinationKeyPrefix: 'nginx',
     });
 
     //
@@ -108,6 +115,12 @@ export class MonolithicStack extends Stack {
       'systemctl start nginx',
       'systemctl enable nginx',
     )
+    // configure nginx as reverse proxy
+    userData.addCommands(
+      `aws s3 cp s3://${nginxDeploy.deployedBucket.bucketName}/nginx/bookstore.conf /etc/nginx/conf.d/bookstore.conf`,
+      'nginx -s reload',
+    )
+
     // setup globalization
     userData.addCommands(
       'dnf install icu -y',
