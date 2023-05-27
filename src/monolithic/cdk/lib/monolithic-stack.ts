@@ -219,31 +219,31 @@ export class MonolithicStack extends Stack {
     //
     // rds
     //
-    // const engine = rds.DatabaseInstanceEngine.mysql({ version: rds.MysqlEngineVersion.VER_8_0_31 });
-    // const paramGrp = new rds.ParameterGroup(this, 'BookStoreParamGrp', {
-    //   engine,
-    //   description: 'for bookstore'
-    // })
-    // const optGrp = new rds.OptionGroup(this, 'BookStoreOptGrp', {
-    //   engine,
-    //   configurations: [],
-    //   description: 'for bookstore'
-    // })
+    const engine = rds.DatabaseInstanceEngine.mysql({ version: rds.MysqlEngineVersion.VER_8_0_31 });
+    const paramGrp = new rds.ParameterGroup(this, 'BookStoreParamGrp', {
+      engine,
+      description: 'for bookstore'
+    })
+    const optGrp = new rds.OptionGroup(this, 'BookStoreOptGrp', {
+      engine,
+      configurations: [],
+      description: 'for bookstore'
+    })
 
-    // const dbInstance = new rds.DatabaseInstance(this, 'BookStoreDbInstance', {
-    //   engine,
-    //   vpc,
-    //   instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.SMALL),
-    //   vpcSubnets: {
-    //     subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
-    //   },
-    //   databaseName: 'bookstore',
-    //   parameterGroup: paramGrp,
-    //   optionGroup: optGrp,
-    //   multiAz: true,
-    //   deleteAutomatedBackups: true,
-    //   removalPolicy: RemovalPolicy.DESTROY    // to avoid OptionGroup deletion error, do not leave any snapshots
-    // });
-    // dbInstance.connections.allowDefaultPortFrom(ec2Sg);
+    const dbInstance = new rds.DatabaseInstance(this, 'BookStoreDbInstance', {
+      engine,
+      vpc,
+      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.SMALL),
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+      },
+      databaseName: 'bookstore',
+      parameterGroup: paramGrp,
+      optionGroup: optGrp,
+      multiAz: true,
+      deleteAutomatedBackups: true,
+      removalPolicy: RemovalPolicy.DESTROY    // to avoid OptionGroup deletion error, do not leave any snapshots
+    });
+    dbInstance.connections.allowDefaultPortFrom(ec2Sg);
   }
 }
