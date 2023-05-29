@@ -1,0 +1,1627 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Monolithic matches the snapshot 1`] = `
+{
+  "Outputs": {
+    "TestCommand": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "curl -I http://",
+            {
+              "Fn::GetAtt": [
+                "Alb16C2F182",
+                "DNSName",
+              ],
+            },
+          ],
+        ],
+      },
+    },
+  },
+  "Parameters": {
+    "BootstrapVersion": {
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "Alb16C2F182": {
+      "DependsOn": [
+        "BookStoreVpcPublicSubnet1DefaultRouteAAAADF06",
+        "BookStoreVpcPublicSubnet1RouteTableAssociation48EF74BE",
+        "BookStoreVpcPublicSubnet2DefaultRouteCA314092",
+        "BookStoreVpcPublicSubnet2RouteTableAssociationAA2F1B40",
+      ],
+      "Properties": {
+        "LoadBalancerAttributes": [
+          {
+            "Key": "deletion_protection.enabled",
+            "Value": "false",
+          },
+        ],
+        "Scheme": "internet-facing",
+        "SecurityGroups": [
+          {
+            "Fn::GetAtt": [
+              "AlbSg1155C1BE",
+              "GroupId",
+            ],
+          },
+        ],
+        "Subnets": [
+          {
+            "Ref": "BookStoreVpcPublicSubnet1SubnetD4610E77",
+          },
+          {
+            "Ref": "BookStoreVpcPublicSubnet2Subnet229BF984",
+          },
+        ],
+        "Type": "application",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+    },
+    "AlbHttpListener00C8B33E": {
+      "Properties": {
+        "DefaultActions": [
+          {
+            "TargetGroupArn": {
+              "Ref": "AlbHttpListenerAppTargetGroupFF1C7D84",
+            },
+            "Type": "forward",
+          },
+        ],
+        "LoadBalancerArn": {
+          "Ref": "Alb16C2F182",
+        },
+        "Port": 80,
+        "Protocol": "HTTP",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
+    "AlbHttpListenerAppTargetGroupFF1C7D84": {
+      "Properties": {
+        "Port": 80,
+        "Protocol": "HTTP",
+        "TargetGroupAttributes": [
+          {
+            "Key": "stickiness.enabled",
+            "Value": "false",
+          },
+        ],
+        "TargetType": "instance",
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+    },
+    "AlbSg1155C1BE": {
+      "Properties": {
+        "GroupDescription": "security group for alb",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "allow http traffic from anywhere",
+            "FromPort": 80,
+            "IpProtocol": "tcp",
+            "ToPort": 80,
+          },
+        ],
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "AppAutoScalingGrpASG51BF02F3": {
+      "Properties": {
+        "DesiredCapacity": "1",
+        "LaunchTemplate": {
+          "LaunchTemplateId": {
+            "Ref": "AppLaunchTmpl999E5075",
+          },
+          "Version": {
+            "Fn::GetAtt": [
+              "AppLaunchTmpl999E5075",
+              "LatestVersionNumber",
+            ],
+          },
+        },
+        "MaxSize": "3",
+        "MinSize": "1",
+        "TargetGroupARNs": [
+          {
+            "Ref": "AlbHttpListenerAppTargetGroupFF1C7D84",
+          },
+        ],
+        "VPCZoneIdentifier": [
+          {
+            "Ref": "BookStoreVpcPrivateSubnet1SubnetDA4AF0A9",
+          },
+          {
+            "Ref": "BookStoreVpcPrivateSubnet2Subnet2A2F4536",
+          },
+        ],
+      },
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "UpdatePolicy": {
+        "AutoScalingScheduledAction": {
+          "IgnoreUnmodifiedGroupSizeProperties": true,
+        },
+      },
+    },
+    "AppAutoScalingGrpScalingPolicyCpu50Percent61C2A067": {
+      "Properties": {
+        "AutoScalingGroupName": {
+          "Ref": "AppAutoScalingGrpASG51BF02F3",
+        },
+        "PolicyType": "TargetTrackingScaling",
+        "TargetTrackingConfiguration": {
+          "PredefinedMetricSpecification": {
+            "PredefinedMetricType": "ASGAverageCPUUtilization",
+          },
+          "TargetValue": 50,
+        },
+      },
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+    },
+    "AppEc2Sg5012268C": {
+      "Properties": {
+        "GroupDescription": "security group for application servers",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "AppEc2SgfromMonolithicStackAlbSg01761FA1809780AED1": {
+      "Properties": {
+        "Description": "allow http traffic from alb",
+        "FromPort": 80,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "AppEc2Sg5012268C",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "AlbSg1155C1BE",
+            "GroupId",
+          ],
+        },
+        "ToPort": 80,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "AppLaunchTmpl999E5075": {
+      "Properties": {
+        "LaunchTemplateData": {
+          "BlockDeviceMappings": [
+            {
+              "DeviceName": "/dev/xvda",
+              "Ebs": {
+                "VolumeSize": 8,
+                "VolumeType": "gp3",
+              },
+            },
+          ],
+          "IamInstanceProfile": {
+            "Arn": {
+              "Fn::GetAtt": [
+                "AppLaunchTmplProfileDC1351E2",
+                "Arn",
+              ],
+            },
+          },
+          "ImageId": "dummy-value-for-/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64",
+          "InstanceType": "t2.micro",
+          "SecurityGroupIds": [
+            {
+              "Fn::GetAtt": [
+                "AppEc2Sg5012268C",
+                "GroupId",
+              ],
+            },
+          ],
+          "TagSpecifications": [
+            {
+              "ResourceType": "instance",
+              "Tags": [
+                {
+                  "Key": "Name",
+                  "Value": "MonolithicStack/AppLaunchTmpl",
+                },
+              ],
+            },
+            {
+              "ResourceType": "volume",
+              "Tags": [
+                {
+                  "Key": "Name",
+                  "Value": "MonolithicStack/AppLaunchTmpl",
+                },
+              ],
+            },
+          ],
+          "UserData": {
+            "Fn::Base64": {
+              "Fn::Join": [
+                "",
+                [
+                  "#!/bin/bash
+dnf update -y
+dnf install nginx -y
+systemctl start nginx
+systemctl enable nginx
+aws s3 cp s3://",
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::Split": [
+                          "/",
+                          {
+                            "Fn::Select": [
+                              5,
+                              {
+                                "Fn::Split": [
+                                  ":",
+                                  {
+                                    "Fn::GetAtt": [
+                                      "DeployNginxCustomResourceBC199A88",
+                                      "DestinationBucketArn",
+                                    ],
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  "/nginx/bookstore.conf /etc/nginx/conf.d/bookstore.conf
+nginx -s reload
+dnf install icu -y
+DOWNLOAD_URL=https://download.visualstudio.microsoft.com/download/pr/b936641a-57d6-4069-bd32-280020863326/5793e00ff9e9973a01ca735479ff15b3/aspnetcore-runtime-7.0.5-linux-x64.tar.gz
+DOTNET_FILE=./aspnetcore-runtime.tar.gz
+wget $DOWNLOAD_URL -O $DOTNET_FILE
+export DOTNET_ROOT=/bin/dotnet
+mkdir -p $DOTNET_ROOT && tar zxf $DOTNET_FILE -C $DOTNET_ROOT
+echo "export PATH=$PATH:$DOTNET_ROOT" >> /etc/environment
+rm $DOTNET_FILE
+APP_DIR=/var/www/bookstore
+mkdir -p $APP_DIR
+aws s3 cp s3://",
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::Split": [
+                          "/",
+                          {
+                            "Fn::Select": [
+                              5,
+                              {
+                                "Fn::Split": [
+                                  ":",
+                                  {
+                                    "Fn::GetAtt": [
+                                      "DeployAppCustomResourceDEE6DDD6",
+                                      "DestinationBucketArn",
+                                    ],
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  "/app $APP_DIR --recursive
+aws s3 cp s3://",
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::Split": [
+                          "/",
+                          {
+                            "Fn::Select": [
+                              5,
+                              {
+                                "Fn::Split": [
+                                  ":",
+                                  {
+                                    "Fn::GetAtt": [
+                                      "DeployServiceCustomResource5DC13F55",
+                                      "DestinationBucketArn",
+                                    ],
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  "/service/kestrel-bookstore.service /etc/systemd/system/kestrel-bookstore.service
+systemctl enable kestrel-bookstore.service
+systemctl start kestrel-bookstore.service
+systemctl status kestrel-bookstore.service",
+                ],
+              ],
+            },
+          },
+        },
+        "LaunchTemplateName": "app-launch-tmpl",
+        "TagSpecifications": [
+          {
+            "ResourceType": "launch-template",
+            "Tags": [
+              {
+                "Key": "Name",
+                "Value": "MonolithicStack/AppLaunchTmpl",
+              },
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::EC2::LaunchTemplate",
+    },
+    "AppLaunchTmplProfileDC1351E2": {
+      "Properties": {
+        "Roles": [
+          {
+            "Ref": "AppRoleDC883459",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::InstanceProfile",
+    },
+    "AppRoleDC883459": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Description": "role for application servers",
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/AmazonSSMManagedInstanceCore",
+              ],
+            ],
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/AmazonS3ReadOnlyAccess",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AssetBucket1D025086": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "aws-cdk:auto-delete-objects",
+            "Value": "true",
+          },
+          {
+            "Key": "aws-cdk:cr-owned:app:ad5e14f3",
+            "Value": "true",
+          },
+          {
+            "Key": "aws-cdk:cr-owned:nginx:e3b6ad5f",
+            "Value": "true",
+          },
+          {
+            "Key": "aws-cdk:cr-owned:service:8a6eda48",
+            "Value": "true",
+          },
+        ],
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AssetBucketAutoDeleteObjectsCustomResource5FFEAE83": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "AssetBucketPolicy6A11ED41",
+      ],
+      "Properties": {
+        "BucketName": {
+          "Ref": "AssetBucket1D025086",
+        },
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::S3AutoDeleteObjects",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AssetBucketPolicy6A11ED41": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "AssetBucket1D025086",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::GetAtt": [
+                    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+                    "Arn",
+                  ],
+                },
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "AssetBucket1D025086",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "AssetBucket1D025086",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "BookStoreDbInstanceE5B7EA67": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "AllocatedStorage": "100",
+        "CopyTagsToSnapshot": true,
+        "DBInstanceClass": "db.t2.small",
+        "DBName": "bookstore",
+        "DBParameterGroupName": {
+          "Ref": "BookStoreParamGrp31A12D5F",
+        },
+        "DBSubnetGroupName": {
+          "Ref": "BookStoreDbInstanceSubnetGroup1F8FDBD6",
+        },
+        "DeleteAutomatedBackups": true,
+        "Engine": "mysql",
+        "EngineVersion": "8.0.31",
+        "MasterUserPassword": {
+          "Fn::Join": [
+            "",
+            [
+              "{{resolve:secretsmanager:",
+              {
+                "Ref": "BookStoreDbInstanceSecretA6268830",
+              },
+              ":SecretString:password::}}",
+            ],
+          ],
+        },
+        "MasterUsername": {
+          "Fn::Join": [
+            "",
+            [
+              "{{resolve:secretsmanager:",
+              {
+                "Ref": "BookStoreDbInstanceSecretA6268830",
+              },
+              ":SecretString:username::}}",
+            ],
+          ],
+        },
+        "MultiAZ": true,
+        "OptionGroupName": {
+          "Ref": "BookStoreOptGrp44D5D9E1",
+        },
+        "PubliclyAccessible": false,
+        "StorageType": "gp2",
+        "VPCSecurityGroups": [
+          {
+            "Fn::GetAtt": [
+              "BookStoreDbInstanceSecurityGroup1FDE82C5",
+              "GroupId",
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::RDS::DBInstance",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "BookStoreDbInstanceSecretA6268830": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Generated by the CDK for stack: ",
+              {
+                "Ref": "AWS::StackName",
+              },
+            ],
+          ],
+        },
+        "GenerateSecretString": {
+          "ExcludeCharacters": " %+~\`#$&*()|[]{}:;<>?!'/@"\\",
+          "GenerateStringKey": "password",
+          "PasswordLength": 30,
+          "SecretStringTemplate": "{"username":"admin"}",
+        },
+      },
+      "Type": "AWS::SecretsManager::Secret",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "BookStoreDbInstanceSecretAttachment82BE2DD5": {
+      "Properties": {
+        "SecretId": {
+          "Ref": "BookStoreDbInstanceSecretA6268830",
+        },
+        "TargetId": {
+          "Ref": "BookStoreDbInstanceE5B7EA67",
+        },
+        "TargetType": "AWS::RDS::DBInstance",
+      },
+      "Type": "AWS::SecretsManager::SecretTargetAttachment",
+    },
+    "BookStoreDbInstanceSecurityGroup1FDE82C5": {
+      "Properties": {
+        "GroupDescription": "Security group for BookStoreDbInstance database",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "BookStoreDbInstanceSecurityGroupfromMonolithicStackAppEc2Sg6922AA44IndirectPort2FA6372D": {
+      "Properties": {
+        "Description": "from MonolithicStackAppEc2Sg6922AA44:{IndirectPort}",
+        "FromPort": {
+          "Fn::GetAtt": [
+            "BookStoreDbInstanceE5B7EA67",
+            "Endpoint.Port",
+          ],
+        },
+        "GroupId": {
+          "Fn::GetAtt": [
+            "BookStoreDbInstanceSecurityGroup1FDE82C5",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "AppEc2Sg5012268C",
+            "GroupId",
+          ],
+        },
+        "ToPort": {
+          "Fn::GetAtt": [
+            "BookStoreDbInstanceE5B7EA67",
+            "Endpoint.Port",
+          ],
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "BookStoreDbInstanceSubnetGroup1F8FDBD6": {
+      "Properties": {
+        "DBSubnetGroupDescription": "Subnet group for BookStoreDbInstance database",
+        "SubnetIds": [
+          {
+            "Ref": "BookStoreVpcPrivateSubnet1SubnetDA4AF0A9",
+          },
+          {
+            "Ref": "BookStoreVpcPrivateSubnet2Subnet2A2F4536",
+          },
+        ],
+      },
+      "Type": "AWS::RDS::DBSubnetGroup",
+    },
+    "BookStoreOptGrp44D5D9E1": {
+      "Properties": {
+        "EngineName": "mysql",
+        "MajorEngineVersion": "8.0",
+        "OptionConfigurations": [],
+        "OptionGroupDescription": "for bookstore",
+      },
+      "Type": "AWS::RDS::OptionGroup",
+    },
+    "BookStoreParamGrp31A12D5F": {
+      "Properties": {
+        "Description": "for bookstore",
+        "Family": "mysql8.0",
+        "Parameters": {},
+      },
+      "Type": "AWS::RDS::DBParameterGroup",
+    },
+    "BookStoreVpc1CF0D72C": {
+      "Properties": {
+        "CidrBlock": "172.16.0.0/16",
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "bookstore-vpc",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPC",
+    },
+    "BookStoreVpcEc2MessagesEndpointB826CCAA": {
+      "Properties": {
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "BookStoreVpcEc2MessagesEndpointSecurityGroup26AE351F",
+              "GroupId",
+            ],
+          },
+        ],
+        "ServiceName": "com.amazonaws.ap-northeast-1.ec2messages",
+        "SubnetIds": [
+          {
+            "Ref": "BookStoreVpcPrivateSubnet1SubnetDA4AF0A9",
+          },
+          {
+            "Ref": "BookStoreVpcPrivateSubnet2Subnet2A2F4536",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "BookStoreVpcEc2MessagesEndpointSecurityGroup26AE351F": {
+      "Properties": {
+        "GroupDescription": "MonolithicStack/BookStoreVpc/Ec2MessagesEndpoint/SecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": {
+              "Fn::GetAtt": [
+                "BookStoreVpc1CF0D72C",
+                "CidrBlock",
+              ],
+            },
+            "Description": {
+              "Fn::Join": [
+                "",
+                [
+                  "from ",
+                  {
+                    "Fn::GetAtt": [
+                      "BookStoreVpc1CF0D72C",
+                      "CidrBlock",
+                    ],
+                  },
+                  ":443",
+                ],
+              ],
+            },
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "bookstore-vpc",
+          },
+        ],
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "BookStoreVpcIGW6F7E80E7": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "bookstore-vpc",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::InternetGateway",
+    },
+    "BookStoreVpcPrivateSubnet1DefaultRoute553895CF": {
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "BookStoreVpcPublicSubnet1NATGatewayC3C6EDA5",
+        },
+        "RouteTableId": {
+          "Ref": "BookStoreVpcPrivateSubnet1RouteTable45A0F1A7",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "BookStoreVpcPrivateSubnet1RouteTable45A0F1A7": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "MonolithicStack/BookStoreVpc/PrivateSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "BookStoreVpcPrivateSubnet1RouteTableAssociation97A29F8C": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "BookStoreVpcPrivateSubnet1RouteTable45A0F1A7",
+        },
+        "SubnetId": {
+          "Ref": "BookStoreVpcPrivateSubnet1SubnetDA4AF0A9",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "BookStoreVpcPrivateSubnet1SubnetDA4AF0A9": {
+      "Properties": {
+        "AvailabilityZone": "dummy1a",
+        "CidrBlock": "172.16.2.0/24",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Private",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Private",
+          },
+          {
+            "Key": "Name",
+            "Value": "MonolithicStack/BookStoreVpc/PrivateSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "BookStoreVpcPrivateSubnet2DefaultRouteB6FE00D0": {
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "BookStoreVpcPublicSubnet1NATGatewayC3C6EDA5",
+        },
+        "RouteTableId": {
+          "Ref": "BookStoreVpcPrivateSubnet2RouteTable8A8503D2",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "BookStoreVpcPrivateSubnet2RouteTable8A8503D2": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "MonolithicStack/BookStoreVpc/PrivateSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "BookStoreVpcPrivateSubnet2RouteTableAssociationDA4C0050": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "BookStoreVpcPrivateSubnet2RouteTable8A8503D2",
+        },
+        "SubnetId": {
+          "Ref": "BookStoreVpcPrivateSubnet2Subnet2A2F4536",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "BookStoreVpcPrivateSubnet2Subnet2A2F4536": {
+      "Properties": {
+        "AvailabilityZone": "dummy1b",
+        "CidrBlock": "172.16.3.0/24",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Private",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Private",
+          },
+          {
+            "Key": "Name",
+            "Value": "MonolithicStack/BookStoreVpc/PrivateSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "BookStoreVpcPublicSubnet1DefaultRouteAAAADF06": {
+      "DependsOn": [
+        "BookStoreVpcVPCGWE8236B52",
+      ],
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "BookStoreVpcIGW6F7E80E7",
+        },
+        "RouteTableId": {
+          "Ref": "BookStoreVpcPublicSubnet1RouteTable1659FED3",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "BookStoreVpcPublicSubnet1EIP40158D97": {
+      "Properties": {
+        "Domain": "vpc",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "MonolithicStack/BookStoreVpc/PublicSubnet1",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::EIP",
+    },
+    "BookStoreVpcPublicSubnet1NATGatewayC3C6EDA5": {
+      "DependsOn": [
+        "BookStoreVpcPublicSubnet1DefaultRouteAAAADF06",
+        "BookStoreVpcPublicSubnet1RouteTableAssociation48EF74BE",
+      ],
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "BookStoreVpcPublicSubnet1EIP40158D97",
+            "AllocationId",
+          ],
+        },
+        "SubnetId": {
+          "Ref": "BookStoreVpcPublicSubnet1SubnetD4610E77",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "MonolithicStack/BookStoreVpc/PublicSubnet1",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::NatGateway",
+    },
+    "BookStoreVpcPublicSubnet1RouteTable1659FED3": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "MonolithicStack/BookStoreVpc/PublicSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "BookStoreVpcPublicSubnet1RouteTableAssociation48EF74BE": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "BookStoreVpcPublicSubnet1RouteTable1659FED3",
+        },
+        "SubnetId": {
+          "Ref": "BookStoreVpcPublicSubnet1SubnetD4610E77",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "BookStoreVpcPublicSubnet1SubnetD4610E77": {
+      "Properties": {
+        "AvailabilityZone": "dummy1a",
+        "CidrBlock": "172.16.0.0/24",
+        "MapPublicIpOnLaunch": true,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Public",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Public",
+          },
+          {
+            "Key": "Name",
+            "Value": "MonolithicStack/BookStoreVpc/PublicSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "BookStoreVpcPublicSubnet2DefaultRouteCA314092": {
+      "DependsOn": [
+        "BookStoreVpcVPCGWE8236B52",
+      ],
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "BookStoreVpcIGW6F7E80E7",
+        },
+        "RouteTableId": {
+          "Ref": "BookStoreVpcPublicSubnet2RouteTable5E426ECE",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "BookStoreVpcPublicSubnet2RouteTable5E426ECE": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "MonolithicStack/BookStoreVpc/PublicSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "BookStoreVpcPublicSubnet2RouteTableAssociationAA2F1B40": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "BookStoreVpcPublicSubnet2RouteTable5E426ECE",
+        },
+        "SubnetId": {
+          "Ref": "BookStoreVpcPublicSubnet2Subnet229BF984",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "BookStoreVpcPublicSubnet2Subnet229BF984": {
+      "Properties": {
+        "AvailabilityZone": "dummy1b",
+        "CidrBlock": "172.16.1.0/24",
+        "MapPublicIpOnLaunch": true,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Public",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Public",
+          },
+          {
+            "Key": "Name",
+            "Value": "MonolithicStack/BookStoreVpc/PublicSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "BookStoreVpcSsmEndpointC469B83E": {
+      "Properties": {
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "BookStoreVpcSsmEndpointSecurityGroup77402406",
+              "GroupId",
+            ],
+          },
+        ],
+        "ServiceName": "com.amazonaws.ap-northeast-1.ssm",
+        "SubnetIds": [
+          {
+            "Ref": "BookStoreVpcPrivateSubnet1SubnetDA4AF0A9",
+          },
+          {
+            "Ref": "BookStoreVpcPrivateSubnet2Subnet2A2F4536",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "BookStoreVpcSsmEndpointSecurityGroup77402406": {
+      "Properties": {
+        "GroupDescription": "MonolithicStack/BookStoreVpc/SsmEndpoint/SecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": {
+              "Fn::GetAtt": [
+                "BookStoreVpc1CF0D72C",
+                "CidrBlock",
+              ],
+            },
+            "Description": {
+              "Fn::Join": [
+                "",
+                [
+                  "from ",
+                  {
+                    "Fn::GetAtt": [
+                      "BookStoreVpc1CF0D72C",
+                      "CidrBlock",
+                    ],
+                  },
+                  ":443",
+                ],
+              ],
+            },
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "bookstore-vpc",
+          },
+        ],
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "BookStoreVpcSsmMessagesEndpoint5271BBE5": {
+      "Properties": {
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "BookStoreVpcSsmMessagesEndpointSecurityGroup717E30C2",
+              "GroupId",
+            ],
+          },
+        ],
+        "ServiceName": "com.amazonaws.ap-northeast-1.ssmmessages",
+        "SubnetIds": [
+          {
+            "Ref": "BookStoreVpcPrivateSubnet1SubnetDA4AF0A9",
+          },
+          {
+            "Ref": "BookStoreVpcPrivateSubnet2Subnet2A2F4536",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "BookStoreVpcSsmMessagesEndpointSecurityGroup717E30C2": {
+      "Properties": {
+        "GroupDescription": "MonolithicStack/BookStoreVpc/SsmMessagesEndpoint/SecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": {
+              "Fn::GetAtt": [
+                "BookStoreVpc1CF0D72C",
+                "CidrBlock",
+              ],
+            },
+            "Description": {
+              "Fn::Join": [
+                "",
+                [
+                  "from ",
+                  {
+                    "Fn::GetAtt": [
+                      "BookStoreVpc1CF0D72C",
+                      "CidrBlock",
+                    ],
+                  },
+                  ":443",
+                ],
+              ],
+            },
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "bookstore-vpc",
+          },
+        ],
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "BookStoreVpcVPCGWE8236B52": {
+      "Properties": {
+        "InternetGatewayId": {
+          "Ref": "BookStoreVpcIGW6F7E80E7",
+        },
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
+    "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536": {
+      "DependsOn": [
+        "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF",
+        "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-372898187978-ap-northeast-1",
+          "S3Key": "9eb41a5505d37607ac419321497a4f8c21cf0ee1f9b4a6b29aa04301aea5c7fd.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "AWS_CA_BUNDLE": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
+          },
+        },
+        "Handler": "index.handler",
+        "Layers": [
+          {
+            "Ref": "DeployAppAwsCliLayerAEF99B2F",
+          },
+        ],
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265",
+            "Arn",
+          ],
+        },
+        "Runtime": "python3.9",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::cdk-hnb659fds-assets-372898187978-ap-northeast-1",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::cdk-hnb659fds-assets-372898187978-ap-northeast-1/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "AssetBucket1D025086",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "AssetBucket1D025086",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF",
+        "Roles": [
+          {
+            "Ref": "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
+      "DependsOn": [
+        "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-372898187978-ap-northeast-1",
+          "S3Key": "350185a1069fa20a23a583e20c77f6844218bd73097902362dc94f1a108f5d89.zip",
+        },
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Lambda function for auto-deleting objects in ",
+              {
+                "Ref": "AssetBucket1D025086",
+              },
+              " S3 bucket.",
+            ],
+          ],
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DeployAppAwsCliLayerAEF99B2F": {
+      "Properties": {
+        "Content": {
+          "S3Bucket": "cdk-hnb659fds-assets-372898187978-ap-northeast-1",
+          "S3Key": "10972873dd8a3bc33ae1cb91d834617be249fd84bed5bdbb6ffbb581650aea83.zip",
+        },
+        "Description": "/opt/awscli/aws",
+      },
+      "Type": "AWS::Lambda::LayerVersion",
+    },
+    "DeployAppCustomResourceDEE6DDD6": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "DestinationBucketArn": {
+          "Fn::GetAtt": [
+            "AssetBucket1D025086",
+            "Arn",
+          ],
+        },
+        "DestinationBucketKeyPrefix": "app",
+        "DestinationBucketName": {
+          "Ref": "AssetBucket1D025086",
+        },
+        "Prune": true,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536",
+            "Arn",
+          ],
+        },
+        "SourceBucketNames": [
+          "cdk-hnb659fds-assets-372898187978-ap-northeast-1",
+        ],
+        "SourceObjectKeys": [
+          "5fe1ecaeed54f8358d92b0e8701fda34afd628412bb342ce09d0b0c07ea7b282.zip",
+        ],
+      },
+      "Type": "Custom::CDKBucketDeployment",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "DeployNginxAwsCliLayer780BC746": {
+      "Properties": {
+        "Content": {
+          "S3Bucket": "cdk-hnb659fds-assets-372898187978-ap-northeast-1",
+          "S3Key": "10972873dd8a3bc33ae1cb91d834617be249fd84bed5bdbb6ffbb581650aea83.zip",
+        },
+        "Description": "/opt/awscli/aws",
+      },
+      "Type": "AWS::Lambda::LayerVersion",
+    },
+    "DeployNginxCustomResourceBC199A88": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "DestinationBucketArn": {
+          "Fn::GetAtt": [
+            "AssetBucket1D025086",
+            "Arn",
+          ],
+        },
+        "DestinationBucketKeyPrefix": "nginx",
+        "DestinationBucketName": {
+          "Ref": "AssetBucket1D025086",
+        },
+        "Prune": true,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536",
+            "Arn",
+          ],
+        },
+        "SourceBucketNames": [
+          "cdk-hnb659fds-assets-372898187978-ap-northeast-1",
+        ],
+        "SourceObjectKeys": [
+          "bc26b96e3e7f578a8cec358b723f7c7fddae6199d96415016baad222719cf30f.zip",
+        ],
+      },
+      "Type": "Custom::CDKBucketDeployment",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "DeployServiceAwsCliLayer08BFBFAD": {
+      "Properties": {
+        "Content": {
+          "S3Bucket": "cdk-hnb659fds-assets-372898187978-ap-northeast-1",
+          "S3Key": "10972873dd8a3bc33ae1cb91d834617be249fd84bed5bdbb6ffbb581650aea83.zip",
+        },
+        "Description": "/opt/awscli/aws",
+      },
+      "Type": "AWS::Lambda::LayerVersion",
+    },
+    "DeployServiceCustomResource5DC13F55": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "DestinationBucketArn": {
+          "Fn::GetAtt": [
+            "AssetBucket1D025086",
+            "Arn",
+          ],
+        },
+        "DestinationBucketKeyPrefix": "service",
+        "DestinationBucketName": {
+          "Ref": "AssetBucket1D025086",
+        },
+        "Prune": true,
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536",
+            "Arn",
+          ],
+        },
+        "SourceBucketNames": [
+          "cdk-hnb659fds-assets-372898187978-ap-northeast-1",
+        ],
+        "SourceObjectKeys": [
+          "7856904bf71c97f2707cdb174a98b55b5ab99f821dfa32d12aa863efbdaecf3a.zip",
+        ],
+      },
+      "Type": "Custom::CDKBucketDeployment",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                  ],
+                  {
+                    "Ref": "BootstrapVersion",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
+        },
+      ],
+    },
+  },
+}
+`;

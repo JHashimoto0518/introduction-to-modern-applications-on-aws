@@ -1,17 +1,25 @@
 import * as cdk from 'aws-cdk-lib';
-import { Template, Match } from 'aws-cdk-lib/assertions';
+import { Template } from 'aws-cdk-lib/assertions';
 import * as Monolithic from '../lib/monolithic-stack';
 
-test('SQS Queue and SNS Topic Created', () => {
-  const app = new cdk.App();
-  // WHEN
-  const stack = new Monolithic.MonolithicStack(app, 'MyTestStack');
-  // THEN
+//
+//  Usage:
+//    export CDK_DEPLOY_REGION=<your region>
+//    export CDK_DEPLOY_ACCOUNT=<your account>
+//    npm test
+//
+describe("Monolithic", () => {
+  test("matches the snapshot", () => {
+    const app = new cdk.App();
+    const stack = new Monolithic.MonolithicStack(app, 'MonolithicStack', {
+      env: {
+        // NOTE: CDK_DEFAULT_ACCOUNT/CDK_DEFAULT_REGION are not set in the test environment
+        account: process.env.CDK_DEPLOY_ACCOUNT,
+        region: process.env.CDK_DEPLOY_REGION
+      }
+    });
 
-  const template = Template.fromStack(stack);
-
-  template.hasResourceProperties('AWS::SQS::Queue', {
-    VisibilityTimeout: 300
+    const template = Template.fromStack(stack);
+    expect(template.toJSON()).toMatchSnapshot();
   });
-  template.resourceCountIs('AWS::SNS::Topic', 1);
 });
