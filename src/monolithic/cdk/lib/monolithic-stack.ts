@@ -30,6 +30,8 @@ export class MonolithicStack extends Stack {
           subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS
         }
       ],
+      // remove all rules from default security group, See: https://docs.aws.amazon.com/ja_jp/config/latest/developerguide/vpc-default-security-group-closed.html
+      restrictDefaultSecurityGroup: true,
     });
 
     // add private endpoints for session manager
