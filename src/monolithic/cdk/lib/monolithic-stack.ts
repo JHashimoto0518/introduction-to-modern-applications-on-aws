@@ -45,6 +45,12 @@ export class MonolithicStack extends Stack {
       service: ec2.InterfaceVpcEndpointAwsService.EC2_MESSAGES,
     });
 
+    // NOTE: Optimize networking costs by using gateway endpoints that are not billed for traffic.
+    // See:  https://docs.aws.amazon.com/ja_jp/AmazonS3/latest/userguide/privatelink-interface-endpoints.html
+    vpc.addGatewayEndpoint('S3Endpoint', {
+      service: ec2.GatewayVpcEndpointAwsService.S3,
+    });
+
     //
     // security group
     //

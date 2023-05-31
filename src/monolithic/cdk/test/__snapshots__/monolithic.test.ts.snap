@@ -1124,6 +1124,41 @@ systemctl status kestrel-bookstore.service",
       "Type": "Custom::VpcRestrictDefaultSG",
       "UpdateReplacePolicy": "Delete",
     },
+    "BookStoreVpcS3Endpoint65A7FB16": {
+      "Properties": {
+        "RouteTableIds": [
+          {
+            "Ref": "BookStoreVpcPrivateSubnet1RouteTable45A0F1A7",
+          },
+          {
+            "Ref": "BookStoreVpcPrivateSubnet2RouteTable8A8503D2",
+          },
+          {
+            "Ref": "BookStoreVpcPublicSubnet1RouteTable1659FED3",
+          },
+          {
+            "Ref": "BookStoreVpcPublicSubnet2RouteTable5E426ECE",
+          },
+        ],
+        "ServiceName": {
+          "Fn::Join": [
+            "",
+            [
+              "com.amazonaws.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".s3",
+            ],
+          ],
+        },
+        "VpcEndpointType": "Gateway",
+        "VpcId": {
+          "Ref": "BookStoreVpc1CF0D72C",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
     "BookStoreVpcSsmEndpointC469B83E": {
       "Properties": {
         "PrivateDnsEnabled": true,
