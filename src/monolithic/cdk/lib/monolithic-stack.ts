@@ -165,7 +165,7 @@ export class MonolithicStack extends Stack {
         {
           deviceName: '/dev/xvda',
           volume: autoscaling.BlockDeviceVolume.ebs(8, {
-            volumeType: autoscaling.EbsDeviceVolumeType.GP3,
+            encrypted: true
           }),
         },
       ],
