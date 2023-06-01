@@ -30,12 +30,13 @@ export class MonolithicStack extends Stack {
           subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS
         }
       ],
-      // remove all rules from default security group, See: https://docs.aws.amazon.com/ja_jp/config/latest/developerguide/vpc-default-security-group-closed.html
+      // remove all rules from default security group
+      // See: https://docs.aws.amazon.com/config/latest/developerguide/vpc-default-security-group-closed.html
       restrictDefaultSecurityGroup: true,
     });
 
     // NOTE: Optimize networking costs by using gateway endpoints that are not billed for traffic.
-    // See:  https://docs.aws.amazon.com/ja_jp/AmazonS3/latest/userguide/privatelink-interface-endpoints.html
+    // See:  https://docs.aws.amazon.com/AmazonS3/latest/userguide/privatelink-interface-endpoints.html
     vpc.addGatewayEndpoint('S3Endpoint', {
       service: ec2.GatewayVpcEndpointAwsService.S3,
     });
