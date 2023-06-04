@@ -11,4 +11,4 @@ cdk.out
 cdk.context.json
 
 # artifacts directory
-assets/publish
+assets/app

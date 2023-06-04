@@ -86,10 +86,12 @@ export class MonolithicStack extends Stack {
     });
 
     // upload app
+    const appVer = 'v1.0';
+    const appKey = `app/${appVer}`;
     const appDeploy = new s3deploy.BucketDeployment(this, 'DeployApp', {
-      sources: [s3deploy.Source.asset(assetsDir + '/publish')],
+      sources: [s3deploy.Source.asset(assetsDir + `/${appKey}`)],
       destinationBucket: assetBucket,
-      destinationKeyPrefix: 'app',
+      destinationKeyPrefix: appKey,
     });
 
     // upload nginx config
@@ -124,6 +126,11 @@ export class MonolithicStack extends Stack {
       `aws s3 cp s3://${nginxDeploy.deployedBucket.bucketName}/nginx/bookstore.conf /etc/nginx/conf.d/bookstore.conf`,
       'nginx -s reload',
     )
+    // setup mysql client
+    userData.addCommands(
+      // See: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ConnectToInstance.html
+      'dnf install mariadb105 -y',
+    );
 
     // setup globalization
     userData.addCommands(
@@ -145,7 +152,7 @@ export class MonolithicStack extends Stack {
     userData.addCommands(
       'APP_DIR=/var/www/bookstore',
       'mkdir -p $APP_DIR',
-      `aws s3 cp s3://${appDeploy.deployedBucket.bucketName}/app $APP_DIR --recursive`
+      `aws s3 cp s3://${appDeploy.deployedBucket.bucketName}/${appKey} $APP_DIR --recursive`
     )
     // configure app as service
     userData.addCommands(
@@ -209,8 +216,7 @@ export class MonolithicStack extends Stack {
       port: 80
     })
 
-    // output test command
-    new CfnOutput(this, 'TestCommand', {
+    new CfnOutput(this, 'AlbTestCommand', {
       value: `curl -I http://${alb.loadBalancerDnsName}`
     })
 
@@ -228,6 +234,7 @@ export class MonolithicStack extends Stack {
       description: 'for bookstore'
     })
 
+    const databaseName = 'bookstore'
     const dbInstance = new rds.DatabaseInstance(this, 'BookStoreDbInstance', {
       engine,
       vpc,
@@ -235,7 +242,7 @@ export class MonolithicStack extends Stack {
       vpcSubnets: {
         subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
       },
-      databaseName: 'bookstore',
+      databaseName,
       parameterGroup: paramGrp,
       optionGroup: optGrp,
       multiAz: true,
@@ -243,5 +250,13 @@ export class MonolithicStack extends Stack {
       removalPolicy: RemovalPolicy.DESTROY    // to avoid OptionGroup deletion error, do not leave any snapshots
     });
     dbInstance.connections.allowDefaultPortFrom(ec2Sg);
+
+    new CfnOutput(this, 'RdsConnectionCommand', {
+      value: `mysql -h ${dbInstance.instanceEndpoint.hostname} -D ${databaseName} -P ${dbInstance.dbInstanceEndpointPort} -u admin -p`
+    });
+
+    new CfnOutput(this, 'RdsConnectionString', {
+      value: `server=${dbInstance.instanceEndpoint.hostname};Port=${dbInstance.dbInstanceEndpointPort};database=${databaseName};user=admin;password=<replace with your password>`
+    });
   }
 }

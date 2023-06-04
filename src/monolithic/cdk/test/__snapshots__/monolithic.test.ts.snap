@@ -3,7 +3,7 @@
 exports[`Monolithic matches the snapshot 1`] = `
 {
   "Outputs": {
-    "TestCommand": {
+    "AlbTestCommand": {
       "Value": {
         "Fn::Join": [
           "",
@@ -15,6 +15,54 @@ exports[`Monolithic matches the snapshot 1`] = `
                 "DNSName",
               ],
             },
+          ],
+        ],
+      },
+    },
+    "RdsConnectionCommand": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "mysql -h ",
+            {
+              "Fn::GetAtt": [
+                "BookStoreDbInstanceE5B7EA67",
+                "Endpoint.Address",
+              ],
+            },
+            " -D bookstore -P ",
+            {
+              "Fn::GetAtt": [
+                "BookStoreDbInstanceE5B7EA67",
+                "Endpoint.Port",
+              ],
+            },
+            " -u admin -p",
+          ],
+        ],
+      },
+    },
+    "RdsConnectionString": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "server=",
+            {
+              "Fn::GetAtt": [
+                "BookStoreDbInstanceE5B7EA67",
+                "Endpoint.Address",
+              ],
+            },
+            ";Port=",
+            {
+              "Fn::GetAtt": [
+                "BookStoreDbInstanceE5B7EA67",
+                "Endpoint.Port",
+              ],
+            },
+            ";database=bookstore;user=admin;password=<replace with your password>",
           ],
         ],
       },
@@ -301,6 +349,7 @@ aws s3 cp s3://",
                   },
                   "/nginx/bookstore.conf /etc/nginx/conf.d/bookstore.conf
 nginx -s reload
+dnf install mariadb105 -y
 dnf install icu -y
 DOWNLOAD_URL=https://download.visualstudio.microsoft.com/download/pr/b936641a-57d6-4069-bd32-280020863326/5793e00ff9e9973a01ca735479ff15b3/aspnetcore-runtime-7.0.5-linux-x64.tar.gz
 DOTNET_FILE=./aspnetcore-runtime.tar.gz
@@ -338,7 +387,7 @@ aws s3 cp s3://",
                       },
                     ],
                   },
-                  "/app $APP_DIR --recursive
+                  "/app/v1.0 $APP_DIR --recursive
 aws s3 cp s3://",
                   {
                     "Fn::Select": [
@@ -453,7 +502,7 @@ systemctl status kestrel-bookstore.service",
             "Value": "true",
           },
           {
-            "Key": "aws-cdk:cr-owned:app:ad5e14f3",
+            "Key": "aws-cdk:cr-owned:app/v1.0:ad5e14f3",
             "Value": "true",
           },
           {
@@ -1402,7 +1451,7 @@ systemctl status kestrel-bookstore.service",
             "Arn",
           ],
         },
-        "DestinationBucketKeyPrefix": "app",
+        "DestinationBucketKeyPrefix": "app/v1.0",
         "DestinationBucketName": {
           "Ref": "AssetBucket1D025086",
         },
@@ -1417,7 +1466,7 @@ systemctl status kestrel-bookstore.service",
           "cdk-hnb659fds-assets-372898187978-ap-northeast-1",
         ],
         "SourceObjectKeys": [
-          "5fe1ecaeed54f8358d92b0e8701fda34afd628412bb342ce09d0b0c07ea7b282.zip",
+          "fc187aab9bb20410934da1b9ac09dc0a5bc8efb30c4308fe99d52b1bb01bc3d2.zip",
         ],
       },
       "Type": "Custom::CDKBucketDeployment",
